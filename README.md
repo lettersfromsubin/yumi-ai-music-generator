@@ -46,7 +46,16 @@ yumi/
   types/
     music.ts                   MusicGenerationInput and GeneratedMusicResult
 ```
+## 📄 Documentation
 
+Detailed project documentation is available in the `/docs` folder:
+
+- 📘 [Product Requirements Document (PRD)](./docs/PRD.md)  
+  → Full problem definition, user needs, goals, and success metrics
+
+- 🎨 [Design Document](./docs/DESIGN.md)  
+  → UX flow, screen structure, user journey, and interaction design
+  
 ## MVP Scope
 
 This version only implements the initial UI and mock request lifecycle. It does not include authentication, database persistence, file storage, social sharing, billing, or real generation provider calls.
