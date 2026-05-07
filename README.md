@@ -10,7 +10,6 @@ Built with:
 - Node.js local backend
 - ACEMusic hosted API integration
 
-=======
 # Yumi — AI Music Creator
 
 Yumi is a portfolio MVP for creating short AI-generated music from mood, genre,
