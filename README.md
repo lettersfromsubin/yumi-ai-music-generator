@@ -69,7 +69,6 @@ collaborative medium that can extend and enrich the creative space around music.
 | Music Provider | ACEMusic hosted API |
 | Local Storage | Generated files in `generated/`; usage record in `server/data/` |
 | Public Demo | Static demo assets in `public/demo/` |
->>>>>>> 7958e6f (Prepare Yumi portfolio MVP)
 
 This project was designed as an MVP prototype for an intelligent music generation experience focused on emotional interaction, personalization, and safe API architecture.
 
