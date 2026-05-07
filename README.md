@@ -495,4 +495,3 @@ assets from `public/demo/`.
 Yumi is an MVP and portfolio research project. It focuses on the end-to-end
 experience of creative music generation rather than production-scale account
 management, billing, sharing, or editing workflows.
->>>>>>> 7958e6f (Prepare Yumi portfolio MVP)
