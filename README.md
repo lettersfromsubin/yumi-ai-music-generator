@@ -2,7 +2,9 @@
 
 Yumi is a Korean-language AI music generation web application that transforms a user’s mood, genre preferences, and creative ideas into personalized music generation requests.
 
-[🚀 Live Demo on Hugging Face](https://huggingface.co/spaces/ALEXJK0901/yumi-ai-music-generator)
+🚀[Live Demo on Hugging Face](https://huggingface.co/spaces/ALEXJK0901/yumi-ai-music-generator)
+
+🎧[SoundCloud Demo Tracks](https://soundcloud.com/oxl8s6qj4r1i?utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing) 
 
 Built with:
 
