@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-
-=======
 # Design Document — Yumi
 
 ## 1. Overview
@@ -318,4 +315,3 @@ Manual UI checks:
 Yumi is a Korean-first AI music creator that demonstrates how a local secure
 backend, hosted music generation, and a focused creator UI can support emotional
 expression and Human-AI creative exploration.
->>>>>>> 7958e6f (Prepare Yumi portfolio MVP)
