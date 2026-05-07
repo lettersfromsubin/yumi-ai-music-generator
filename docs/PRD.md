@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-
-=======
 # Product Requirements Document — Yumi
 
 ## 1. Product Summary
@@ -249,4 +246,3 @@ The backend prompt should request:
 Yumi is a Korean-first AI music creator that uses generative AI as a collaborative
 medium for emotional expression, musical experimentation, and Human-AI creative
 interaction.
->>>>>>> 7958e6f (Prepare Yumi portfolio MVP)
