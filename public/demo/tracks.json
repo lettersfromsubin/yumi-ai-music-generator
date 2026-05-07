@@ -1,0 +1,9 @@
+[
+  {
+    "title": "유미 데모 트랙",
+    "audioUrl": "",
+    "imageUrl": "",
+    "lyricsText": "배포 버전에서는 미리 생성한 MP3 또는 WAV 파일을 public/demo 폴더에 넣고 이 manifest의 audioUrl을 /demo/파일명.mp3 또는 /demo/파일명.wav로 바꿉니다.",
+    "prompt": "유미 데모 트랙: 차분한 감정, Lo-fi R&B 질감, 따뜻한 베이스, 깨끗한 드럼, 부드러운 한국어 보컬 중심."
+  }
+]

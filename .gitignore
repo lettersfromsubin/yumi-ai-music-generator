@@ -2,6 +2,9 @@ node_modules
 .next
 out
 dist
+generated
+server/data/usage.json
+recovered-yumi-codex-chat.md
 
 .env
 .env.local

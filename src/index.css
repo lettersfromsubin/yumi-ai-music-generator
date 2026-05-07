@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  font-family:
+    Inter, "Pretendard", "Noto Sans KR", ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: #eef3f3;
+}
+
+body {
+  margin: 0;
+  background: #eef3f3;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+::selection {
+  background: #d7f5ef;
+  color: #17202a;
+}
+
+:focus-visible {
+  outline: 3px solid rgba(19, 168, 158, 0.34);
+  outline-offset: 3px;
+}
