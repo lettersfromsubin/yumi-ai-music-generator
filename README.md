@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # 🎵 Yumi — AI-Powered Personalized Music Generation MVP
 
 Yumi is a Korean-language AI music generation web application that transforms a user’s mood, genre preferences, and creative ideas into personalized music generation requests.
