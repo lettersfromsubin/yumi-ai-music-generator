@@ -1,84 +1,296 @@
-# Yumi
+# 🎵 Yumi — AI-Powered Personalized Music Generation MVP
 
-Yumi is a guided AI music generation web app MVP. Users move through a simple flow that captures mood, genre preferences, and creative input before seeing a placeholder generated music result.
+Yumi is a Korean-language AI music generation web application that transforms a user’s mood, genre preferences, and creative ideas into personalized music generation requests.
 
-The product is designed for a future Suno API wrapper integration that will generate audio, album artwork, and video outputs. That integration is planned and in progress; this MVP intentionally uses mock data only.
+Built with:
 
-## Overview
-
-Yumi turns an early creative feeling into a structured music generation request. The current app focuses on the user experience and project architecture needed before real model/provider orchestration is added.
-
-## Features
-
-- Home page with project introduction and Start button
-- Guided flow: Home -> Mood -> Preferences -> Creative Input -> Loading -> Result
-- Mood selection with preset chips and custom mood input
-- Genre preference selection with optional artist references
-- Creative input fields for lyrics, song idea, vocal style, and sound description
-- Emotional loading state while the mock request resolves
-- Result screen with placeholder album cover, audio player, video area, and Generate Again button
-- Mock `/api/generate` route returning placeholder generated track data
-
-## Tech Stack
-
-- Next.js
 - React
-- TypeScript
-- CSS Modules-style global utility classes in `app/globals.css`
+- Vite
+- Tailwind CSS
+- Node.js local backend
+- ACEMusic hosted API integration
 
-## Architecture
+This project was designed as an MVP prototype for an intelligent music generation experience focused on emotional interaction, personalization, and safe API architecture.
+
+---
+
+# ✨ Project Overview
+
+Yumi guides users through a simple emotional music creation flow:
+
+```text
+Mood Selection
+→ Genre Preferences
+→ Creative Input
+→ AI Music Request
+→ Generated Music Result
+```
+
+Unlike direct frontend API integrations, Yumi hides all provider communication behind a secure local backend layer.
+
+---
+
+# 🌱 Creative Philosophy
+
+Yumi was not created to replace real artists, musicians, or human creativity.
+
+The goal of this project is to explore how generative AI can become a creative support tool that helps users express emotions, discover new musical ideas, and expand their creative possibilities.
+
+Rather than replacing human artists, Yumi aims to demonstrate how AI systems can:
+
+- assist creative exploration
+- support emotional expression
+- inspire experimentation
+- help users interact with music in new ways
+
+This project is also part of a broader research interest in Human-AI Interaction and emotionally aware generative systems.
+
+Yumi treats generative AI not as a substitute for human artistry, but as a collaborative medium that can extend and enrich the creative space around music.
+
+# 🧠 Key Features
+
+- 🎼 Emotion-based music generation flow
+- 🇰🇷 Korean-language UI/UX
+- 🔒 Secure backend API proxy architecture
+- 🎧 Demo playback mode for public deployment
+- 🧩 Structured prompt engineering pipeline
+- ⚡ Fast React + Vite frontend
+- 🎨 Tailwind-based responsive interface
+- 📁 Local generated audio management
+- 🛡️ Security validation scripts
+
+---
+
+# 🏗️ Architecture
+
+```text
+React Frontend (Yumi)
+        ↓
+Local Yumi Backend (127.0.0.1:4000)
+        ↓
+ACEMusic Hosted API
+        ↓
+Generated Audio Response
+```
+
+---
+
+# ⚙️ Current Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | React + Vite |
+| Styling | Tailwind CSS |
+| Backend | Node.js |
+| Music Provider | ACEMusic Hosted API |
+| Deployment Mode | Demo-safe public deployment |
+| Language | Korean UI |
+
+---
+
+# 📂 Project Structure
 
 ```text
 yumi/
-  app/
-    api/generate/route.ts      Mock generation API route
-    globals.css                Responsive MVP styling
-    layout.tsx                 Root app layout and metadata
-    page.tsx                   App entry point
-  components/
-    CreativeInputStep.tsx      Lyrics, idea, vocal, and sound inputs
-    HomeScreen.tsx             Intro screen
-    LoadingState.tsx           Emotional loading messages
-    MoodStep.tsx               Mood selection step
-    PreferenceStep.tsx         Genre and artist preference step
-    ResultScreen.tsx           Mock generated result
-    YumiFlow.tsx               Client-side guided flow controller
-  types/
-    music.ts                   MusicGenerationInput and GeneratedMusicResult
+├── public/
+│   └── demo/
+├── server/
+├── src/
+├── generated/
+├── .env.example
+├── package.json
+└── README.md
 ```
-## 📄 Documentation
 
-Detailed project documentation is available in the `/docs` folder:
+---
 
-- 📘 [Product Requirements Document (PRD)](./docs/PRD.md)  
-  → Full problem definition, user needs, goals, and success metrics
+# 🔐 Security Architecture
 
-- 🎨 [Design Document](./docs/DESIGN.md)  
-  → UX flow, screen structure, user journey, and interaction design
-  
-## MVP Scope
+Yumi intentionally avoids exposing provider credentials to the browser.
 
-This version only implements the initial UI and mock request lifecycle. It does not include authentication, database persistence, file storage, social sharing, billing, or real generation provider calls.
+## Principles
 
-## Future Roadmap
+- API keys are stored only inside `.env.local`
+- Frontend never directly calls external music APIs
+- Public deployments disable real generation
+- Demo audio is served statically
+- Sensitive files are excluded from Git
 
-- Integrate the Suno API wrapper in `/api/generate`
-- Add robust request validation and provider error handling
-- Return real generated audio, image, and video URLs
-- Add generation status polling for longer-running jobs
-- Add editable prompt summaries before generation
-- Add download and export actions after generation
-- Add project history after storage is introduced
+---
 
-## Suno Integration Note
+# 🚫 Files Excluded From Git
 
-The Suno API wrapper integration should be implemented server-side in `app/api/generate/route.ts`. Keep provider credentials and orchestration logic on the server, then return a `GeneratedMusicResult` to the client flow.
+```gitignore
+node_modules/
+dist/
+.env
+.env.local
+generated/
+*.wav
+*.mp3
+.venv/
+```
 
-## Getting Started
+---
+
+# 🚀 Local Development
+
+## Install Dependencies
 
 ```bash
 npm install
+```
+
+## Run Frontend
+
+```bash
 npm run dev
 ```
 
-Then open `http://localhost:3000`.
+Frontend usually opens at:
+
+```text
+http://localhost:5173
+```
+
+---
+
+# 🔧 Backend Configuration
+
+Create local environment file:
+
+```bash
+cp .env.example .env.local
+```
+
+Example configuration:
+
+```env
+MUSIC_PROVIDER=acemusic-api
+ACEMUSIC_API_BASE_URL=https://api.acemusic.ai
+ACEMUSIC_API_KEY=replace_with_new_key
+
+LOCAL_DAILY_LIMIT=0
+LOCAL_BIND_HOST=127.0.0.1
+LOCAL_API_PORT=4000
+
+LOCAL_ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+
+DEPLOY_DEMO_ONLY=false
+
+VITE_MUSIC_API_BASE=http://127.0.0.1:4000
+```
+
+---
+
+# ▶️ Run Local Backend
+
+```bash
+npm run server
+npm run server:music
+```
+
+Health check:
+
+```bash
+curl http://127.0.0.1:4000/api/health
+curl http://127.0.0.1:4000/api/usage
+```
+
+---
+
+# ☁️ Hosted Provider Integration
+
+Yumi currently uses only the hosted ACEMusic API flow.
+
+The backend converts frontend emotional input into structured Korean music-generation prompts and sends requests to:
+
+```text
+POST /v1/chat/completions
+```
+
+Key characteristics:
+
+- Browser never accesses provider directly
+- API key remains server-side
+- Audio responses stored locally
+- Structured metadata returned to frontend
+
+---
+
+# 🎧 Public Demo Deployment
+
+For safety reasons, public deployments use demo-only playback.
+
+When either condition is true:
+
+```env
+DEPLOY_DEMO_ONLY=true
+```
+
+or
+
+```env
+NODE_ENV=production
+```
+
+the backend stops external generation and serves demo tracks only.
+
+---
+
+# 🧪 Validation & Security Checks
+
+## Type Checking
+
+```bash
+npm run typecheck
+```
+
+## Production Build
+
+```bash
+npm run build
+```
+
+## Security Scan
+
+```bash
+npm run security:check
+```
+
+Security checks detect:
+
+- Exposed API keys
+- Hardcoded bearer tokens
+- Committed credentials
+- Dangerous environment leaks
+
+---
+
+## ACE-Step
+
+- https://github.com/ace-step/ACE-Step-1.5
+- https://github.com/ace-step/ACE-Step-1.5/blob/main/docs/en/INSTALL.md
+- https://github.com/ace-step/ACE-Step-1.5/blob/main/docs/en/API.md
+
+---
+
+# 🎯 Future Goals
+
+Planned future extensions include:
+
+- Full AI music generation pipeline
+- Album artwork generation
+- Emotion-aware recommendation system
+- User listening history adaptation
+- Intelligent prompt refinement
+- LLM-powered music understanding
+- Entertainment-focused AI interaction research
+
+---
+
+
+
+# 📄 License
+
+This project is intended for educational, research, and portfolio purposes.
