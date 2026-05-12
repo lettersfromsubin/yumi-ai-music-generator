@@ -1,6 +1,6 @@
 # Yumi — AI Music Creator
 
-[Live Demo on Hugging Face](https://huggingface.co/spaces/ALEXJK0901/yumi-ai-music-creator) (updated 05.13)
+[Live Demo on Hugging Face](https://huggingface.co/spaces/ALEXJK0901/yumi-ai-music-creator) (updated 05.13.2026)
 
 [SoundCloud Demo Tracks](https://soundcloud.com/oxl8s6qj4r1i?utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing)
 
