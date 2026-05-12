@@ -1,3 +1,12 @@
+---
+License: mit
+sdk: docker
+title: Yumi AI Music Creator
+emoji: 🎧
+colorFrom: indigo
+colorTo: green
+short_description: Korean-first AI music creator with ACEMusic backend
+---
 # Yumi — AI Music Creator
 
 Yumi is a portfolio MVP for creating short AI-generated music from mood, genre,
