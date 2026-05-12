@@ -1,3 +1,12 @@
+---
+License: mit
+sdk: docker
+title: Yumi AI Music Creator
+emoji: 🎧
+colorFrom: indigo
+colorTo: green
+short_description: Korean-first AI music creator with ACEMusic backend
+---
 # Yumi — AI Music Creator
 
 [Live Demo on Hugging Face](https://huggingface.co/spaces/ALEXJK0901/yumi-ai-music-generator)
