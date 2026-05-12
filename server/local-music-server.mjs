@@ -1,12 +1,13 @@
 import { createServer } from "node:http";
 import { createReadStream, existsSync } from "node:fs";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(__dirname, "..");
 const envPath = path.join(projectRoot, ".env.local");
+const distDir = path.join(projectRoot, "dist");
 const generatedDir = path.join(projectRoot, "generated");
 const dataDir = path.join(projectRoot, "server", "data");
 const usagePath = path.join(dataDir, "usage.json");
@@ -21,15 +22,16 @@ function isPlaceholderValue(value) {
 }
 
 const provider = resolveProvider(process.env.MUSIC_PROVIDER || "acemusic-api");
-const bindHost = process.env.LOCAL_BIND_HOST || "127.0.0.1";
-const port = Number(process.env.LOCAL_API_PORT || 4000);
+const isProductionRuntime = process.env.NODE_ENV === "production";
+const bindHost = process.env.LOCAL_BIND_HOST || (isProductionRuntime ? "0.0.0.0" : "127.0.0.1");
+const port = Number(process.env.PORT || process.env.LOCAL_API_PORT || 4000);
 const dailyLimit = parseDailyLimit(process.env.LOCAL_DAILY_LIMIT);
 const allowedOrigins = (process.env.LOCAL_ALLOWED_ORIGINS ||
   "http://localhost:5173,http://127.0.0.1:5173")
   .split(",")
   .map((origin) => origin.trim())
   .filter(Boolean);
-const demoOnlyMode = parseBooleanEnv(process.env.DEPLOY_DEMO_ONLY) || process.env.NODE_ENV === "production";
+const demoOnlyMode = parseBooleanEnv(process.env.DEPLOY_DEMO_ONLY);
 
 const acemusicApiBaseUrl = (process.env.ACEMUSIC_API_BASE_URL || "https://api.acemusic.ai").replace(
   /\/$/,
@@ -128,6 +130,21 @@ function corsHeaders(origin) {
   };
 }
 
+function isSameHostOrigin(origin, request) {
+  try {
+    const originHost = new URL(origin).host;
+    const forwardedHost = String(request.headers["x-forwarded-host"] || "").split(",")[0].trim();
+    const requestHost = forwardedHost || request.headers.host || "";
+    return Boolean(requestHost && originHost === requestHost);
+  } catch {
+    return false;
+  }
+}
+
+function isAllowedOrigin(origin, request) {
+  return !origin || allowedOrigins.includes(origin) || isSameHostOrigin(origin, request);
+}
+
 function sendJson(response, statusCode, body, origin) {
   response.writeHead(statusCode, {
     "Content-Type": "application/json; charset=utf-8",
@@ -177,7 +194,26 @@ function usagePayload(usage) {
 }
 
 function localApiBase() {
-  return `http://${bindHost}:${port}`;
+  const displayHost = bindHost === "0.0.0.0" ? "127.0.0.1" : bindHost;
+  return `http://${displayHost}:${port}`;
+}
+
+function publicBaseUrlFromRequest(request) {
+  const configuredBase = (process.env.PUBLIC_APP_BASE_URL || process.env.PUBLIC_API_BASE_URL || "")
+    .trim()
+    .replace(/\/$/, "");
+
+  if (configuredBase) {
+    return configuredBase;
+  }
+
+  const forwardedHost = String(request.headers["x-forwarded-host"] || "").split(",")[0].trim();
+  const host = forwardedHost || request.headers.host || `127.0.0.1:${port}`;
+  const forwardedProto = String(request.headers["x-forwarded-proto"] || "").split(",")[0].trim();
+  const protocol =
+    forwardedProto || (/^(localhost|127\.|0\.0\.0\.0)/.test(host) ? "http" : "https");
+
+  return `${protocol}://${host}`;
 }
 
 function safeFileName(value) {
@@ -1090,9 +1126,9 @@ async function persistHostedAudio(item, input, title) {
   return persistAudioBuffer(Buffer.from(arrayBuffer), input, contentType, extension, title);
 }
 
-async function callAcemusicHosted(input, prompt) {
+async function callAcemusicHosted(input, prompt, publicBaseUrl) {
   if (!acemusicApiKey) {
-    throw new Error("ACEMUSIC_API_KEY가 .env.local에 설정되어 있지 않습니다.");
+    throw new Error("ACEMUSIC_API_KEY가 서버 환경 변수 또는 .env.local에 설정되어 있지 않습니다.");
   }
 
   const requestBody = buildAcemusicHostedBody(input, prompt);
@@ -1117,8 +1153,8 @@ async function callAcemusicHosted(input, prompt) {
 
   return {
     title,
-    audioUrl: `${localApiBase()}/generated/${encodeURIComponent(savedAudio.audioFileName)}`,
-    imageUrl: `${localApiBase()}/generated/${encodeURIComponent(coverFileName)}`,
+    audioUrl: `${publicBaseUrl}/generated/${encodeURIComponent(savedAudio.audioFileName)}`,
+    imageUrl: `${publicBaseUrl}/generated/${encodeURIComponent(coverFileName)}`,
     fileName: savedAudio.audioFileName,
     coverFileName,
     mimeType: savedAudio.contentType,
@@ -1149,7 +1185,7 @@ async function loadDemoTrack() {
   return null;
 }
 
-async function createDemoResult(input, prompt, usage, reason) {
+async function createDemoResult(input, prompt, usage, reason, publicBaseUrl) {
   const demoTrack = await loadDemoTrack();
   const demoPrompt = typeof demoTrack?.prompt === "string" ? demoTrack.prompt : prompt;
   const demoLyrics = typeof demoTrack?.lyricsText === "string" ? demoTrack.lyricsText : "";
@@ -1165,7 +1201,7 @@ async function createDemoResult(input, prompt, usage, reason) {
     imageUrl:
       typeof demoTrack?.imageUrl === "string" && demoTrack.imageUrl
         ? demoTrack.imageUrl
-        : `${localApiBase()}/generated/${encodeURIComponent(coverFileName)}`,
+        : `${publicBaseUrl}/generated/${encodeURIComponent(coverFileName)}`,
     prompt: demoPrompt,
     lyricsText: buildDisplayLyricsText(input, demoLyrics, prompt),
     provider: "demo",
@@ -1180,8 +1216,8 @@ async function createDemoResult(input, prompt, usage, reason) {
   };
 }
 
-async function generateWithProvider(input, prompt) {
-  const generated = await callAcemusicHosted(input, prompt);
+async function generateWithProvider(input, prompt, publicBaseUrl) {
+  const generated = await callAcemusicHosted(input, prompt, publicBaseUrl);
 
   return {
     ...generated,
@@ -1201,6 +1237,7 @@ async function generateTrack(request, response, origin) {
   }
 
   const prompt = buildStructuredPrompt(input);
+  const publicBaseUrl = publicBaseUrlFromRequest(request);
 
   const usage = await readUsage();
 
@@ -1212,7 +1249,8 @@ async function generateTrack(request, response, origin) {
         input,
         prompt,
         usage,
-        "공개 배포 또는 demo-only 모드에서는 실제 생성 대신 미리 준비한 데모 결과만 보여줍니다."
+        "demo-only 모드에서는 실제 생성 대신 미리 준비한 데모 결과만 보여줍니다.",
+        publicBaseUrl
       ),
       origin
     );
@@ -1232,7 +1270,7 @@ async function generateTrack(request, response, origin) {
     return;
   }
 
-  const generated = await generateWithProvider(input, prompt);
+  const generated = await generateWithProvider(input, prompt, publicBaseUrl);
   const nextUsage = { date: usage.date, count: usage.count + 1 };
   await writeUsage(nextUsage);
 
@@ -1297,6 +1335,78 @@ function serveGeneratedFile(request, response, origin) {
   createReadStream(filePath).pipe(response);
 }
 
+const staticContentTypes = {
+  ".html": "text/html; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".mjs": "text/javascript; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".svg": "image/svg+xml; charset=utf-8",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".webp": "image/webp",
+  ".ico": "image/x-icon",
+  ".txt": "text/plain; charset=utf-8",
+  ".map": "application/json; charset=utf-8"
+};
+
+async function isReadableFile(filePath) {
+  try {
+    return (await stat(filePath)).isFile();
+  } catch {
+    return false;
+  }
+}
+
+async function serveStaticAsset(request, response, origin) {
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    return false;
+  }
+
+  if (!existsSync(distDir)) {
+    return false;
+  }
+
+  const requestUrl = new URL(request.url, localApiBase());
+  const requestedPath = decodeURIComponent(requestUrl.pathname);
+  const relativePath = requestedPath === "/" ? "index.html" : requestedPath.replace(/^\/+/, "");
+  const assetPath = path.normalize(path.join(distDir, relativePath));
+  const isInsideDist = assetPath === distDir || assetPath.startsWith(`${distDir}${path.sep}`);
+
+  if (!isInsideDist) {
+    sendJson(response, 403, { error: "Forbidden" }, origin);
+    return true;
+  }
+
+  let filePath = assetPath;
+
+  if (!(await isReadableFile(filePath))) {
+    filePath = path.join(distDir, "index.html");
+  }
+
+  if (!(await isReadableFile(filePath))) {
+    return false;
+  }
+
+  const extension = path.extname(filePath).toLowerCase();
+  const isIndex = path.basename(filePath) === "index.html";
+
+  response.writeHead(200, {
+    "Content-Type": staticContentTypes[extension] || "application/octet-stream",
+    "Cache-Control": isIndex ? "no-store" : "public, max-age=31536000, immutable",
+    ...corsHeaders(origin)
+  });
+
+  if (request.method === "HEAD") {
+    response.end();
+    return true;
+  }
+
+  createReadStream(filePath).pipe(response);
+  return true;
+}
+
 function buildHealthPayload() {
   return {
     ok: true,
@@ -1325,7 +1435,7 @@ const server = createServer(async (request, response) => {
       return;
     }
 
-    if (origin && !allowedOrigins.includes(origin)) {
+    if (origin && !isAllowedOrigin(origin, request)) {
       sendJson(response, 403, { error: "허용되지 않은 Origin입니다." }, origin);
       return;
     }
@@ -1347,6 +1457,10 @@ const server = createServer(async (request, response) => {
 
     if (request.url?.startsWith("/generated/") && request.method === "GET") {
       serveGeneratedFile(request, response, origin);
+      return;
+    }
+
+    if (await serveStaticAsset(request, response, origin)) {
       return;
     }
 

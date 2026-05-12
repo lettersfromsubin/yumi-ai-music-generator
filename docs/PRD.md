@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-
-=======
 # Product Requirements Document — Yumi
 
 ## 1. Product Summary
@@ -8,12 +5,13 @@
 Yumi is an AI music creation MVP that helps users turn emotions, creative ideas,
 lyrics, and sound preferences into generated music.
 
-The current product is a local-first web app:
+The current product is a server-backed web app:
 
 - React/Vite frontend
-- local Node.js backend
+- Node.js backend for local development or Hugging Face Docker Space
 - ACEMusic hosted API provider
-- demo-only mode for public deployment
+- full generation on deployment when server-side secrets are configured
+- optional demo-only mode when no provider call should be made
 
 Yumi is designed as a portfolio and Human-AI Interaction research project. The
 product goal is not to replace musicians, but to explore how generative systems
@@ -98,7 +96,7 @@ Yumi is not trying to provide:
 2. User chooses mood, genre, artists, vocal tone, sound details, and duration.
 3. User chooses automatic title or custom title.
 4. User clicks `Create`.
-5. Frontend sends structured input to the local backend.
+5. Frontend sends structured input to the backend.
 6. Backend calls ACEMusic hosted API.
 7. Backend saves returned audio locally.
 8. Backend builds an album-cover SVG using the final title.
@@ -134,6 +132,7 @@ Yumi is not trying to provide:
 | FR-13 | User can download audio, cover, and lyrics when available | Implemented |
 | FR-14 | Public demo mode avoids external provider calls | Implemented |
 | FR-15 | Secret scan command checks for committed API keys | Implemented |
+| FR-16 | Docker Space runtime supports full generation with server-side secrets | Implemented |
 
 ## 8. Data Model
 
@@ -206,7 +205,7 @@ The backend prompt should request:
 - API keys must live only in `.env.local` or server-side deployment secrets.
 - React code must not include provider keys.
 - `.env.local`, `generated/`, and local usage data must not be committed.
-- Public portfolio deployment should use demo-only mode unless backend secrets are configured safely.
+- Public portfolio deployment can run full generation only when backend secrets are configured safely.
 - `npm run security:check` should be run before publishing.
 
 ## 11. Constraints
@@ -242,11 +241,10 @@ The backend prompt should request:
 - User accounts and saved projects
 - Shareable public song pages
 - Optional image-generation provider for richer album art
-- Hugging Face Space demo packaging
+- Hugging Face Docker Space deployment polish
 
 ## Final One-Line Definition
 
 Yumi is a Korean-first AI music creator that uses generative AI as a collaborative
 medium for emotional expression, musical experimentation, and Human-AI creative
 interaction.
->>>>>>> 7958e6f (Prepare Yumi portfolio MVP)
