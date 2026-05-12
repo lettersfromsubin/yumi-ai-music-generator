@@ -6,10 +6,10 @@ Yumi is a Korean-first AI music creator web app. The interface is built around a
 single creator workspace rather than a marketing landing page.
 
 Users describe a song, adjust musical preferences, generate a track through a
-local backend, and inspect the result in a right-side playback panel.
+server-side backend, and inspect the result in a right-side playback panel.
 
-The current implementation is a React/Vite MVP with a local Node backend and an
-ACEMusic hosted provider integration.
+The current implementation is a React/Vite MVP with a Node backend that can run
+locally or inside a Hugging Face Docker Space.
 
 ## 2. Design Principles
 
@@ -29,10 +29,10 @@ The design should present AI as a collaborative creative medium. It should avoid
 claims that the system replaces human musicians or guarantees professional music
 production quality.
 
-### Safe Local API Boundary
+### Safe Server API Boundary
 
-The browser must never receive the hosted provider API key. The local backend is
-part of the product design because it protects credentials and normalizes
+The browser must never receive the hosted provider API key. The backend is part
+of the product design because it protects credentials and normalizes
 provider output before the UI displays it.
 
 ## 3. Current UX Structure
@@ -119,7 +119,7 @@ flowchart TD
 sequenceDiagram
     participant User
     participant UI as React/Vite UI
-    participant Backend as Local Node Backend
+    participant Backend as Yumi Node Backend
     participant Provider as ACEMusic Hosted API
     participant Files as generated/ files
 
@@ -132,18 +132,18 @@ sequenceDiagram
     UI-->>User: Show player, cover, lyrics, subtitles, downloads
 ```
 
-### Public Demo Flow
+### Deployment Flow
 
 ```mermaid
 flowchart TD
-    A[Public UI] --> B[Backend demo-only mode]
-    B --> C[Read public/demo/tracks.json]
-    C --> D[Return prepared demo asset]
-    D --> E[No external API call]
+    A[Hugging Face Docker Space] --> B[Node backend serves dist]
+    B --> C[Same-origin API routes]
+    C --> D[ACEMusic hosted API with Space Secret]
+    D --> E[Generated assets served from /generated]
 ```
 
-Demo-only mode exists to keep private generation keys safe during public
-portfolio deployment.
+Demo-only mode remains available when the project should be shown without
+calling the hosted music provider.
 
 ## 7. Data Model
 
@@ -240,7 +240,7 @@ This is not true word-level voice alignment.
 | --- | --- |
 | API key exposed in browser | Backend-only `.env.local` usage |
 | Secrets committed to Git | `.gitignore` + `npm run security:check` |
-| Public visitors using private key | `DEPLOY_DEMO_ONLY=true` |
+| Public visitors using private key | Keep provider key server-side in Space Secrets |
 | Generated files committed accidentally | `generated/` excluded |
 | Provider metadata shown as lyrics | Lyrics extraction/filtering |
 
@@ -307,11 +307,11 @@ Manual UI checks:
 - Shareable song pages
 - User accounts
 - Better album-art generation
-- Hugging Face Space demo packaging
+- Hugging Face Docker Space deployment polish
 - Optional model/provider selector for research comparison
 
 ## Final Concept
 
-Yumi is a Korean-first AI music creator that demonstrates how a local secure
-backend, hosted music generation, and a focused creator UI can support emotional
+Yumi is a Korean-first AI music creator that demonstrates how a secure backend,
+hosted music generation, and a focused creator UI can support emotional
 expression and Human-AI creative exploration.

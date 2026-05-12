@@ -6,6 +6,7 @@
     "dev": "vite --host 0.0.0.0",
     "server": "node server/local-music-server.mjs",
     "server:music": "node server/local-music-server.mjs",
+    "start": "node server/local-music-server.mjs",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
     "security:check": "node server/check-secrets.mjs",

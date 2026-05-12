@@ -1,52 +1,25 @@
-# 🎵 Yumi — AI-Powered Personalized Music Generation MVP
+# Yumi — AI Music Creator
 
-Yumi is a Korean-language AI music generation web application that transforms a user’s mood, genre preferences, and creative ideas into personalized music generation requests.
+[Live Demo on Hugging Face](https://huggingface.co/spaces/ALEXJK0901/yumi-ai-music-generator)
 
-🚀[Live Demo on Hugging Face](https://huggingface.co/spaces/ALEXJK0901/yumi-ai-music-generator)
+[SoundCloud Demo Tracks](https://soundcloud.com/oxl8s6qj4r1i?utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing)
 
-🎧[SoundCloud Demo Tracks](https://soundcloud.com/oxl8s6qj4r1i?utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing) 
+Yumi is a portfolio MVP for creating short AI-generated music from mood, genre,
+lyrics, and sound direction.
 
-Built with:
+The project combines a Korean-first music creator UI with a Node backend
+that keeps the hosted music API key out of the browser. Users can write a song
+idea, choose creative constraints, generate a track, view generated lyrics,
+play approximate subtitles, download the available assets, and preview an
+album-cover style visual.
 
-- React
-- Vite
-- Tailwind CSS
-- Node.js local backend
-- ACEMusic hosted API integration
-
----
-
-# ✨ Project Overview
-
-Yumi is a portfolio MVP for creating short AI-generated music experiences from:
-
-- mood
-- genre preferences
-- lyrics or creative ideas
-- sound direction
-
-The project combines a Korean-first music creator interface with a secure local backend architecture that keeps external API credentials out of the browser.
-
-Users can:
-
-- write a song idea
-- choose emotional and stylistic settings
-- generate music
-- preview generated lyrics
-- listen to generated audio
-- view subtitle-like lyric timing
-- preview generated album-cover visuals
-- download available assets
-
-Unlike direct frontend API integrations, Yumi hides all provider communication behind a secure backend layer.
-
----
-
-# 🌱 Creative Philosophy
+## 🌱 Creative Philosophy
 
 Yumi was not created to replace real artists, musicians, or human creativity.
 
-The goal of this project is to explore how generative AI can become a creative support tool that helps users express emotions, discover new musical ideas, and expand their creative possibilities.
+The goal of this project is to explore how generative AI can become a creative
+support tool that helps users express emotions, discover new musical ideas, and
+expand their creative possibilities.
 
 Rather than replacing human artists, Yumi aims to demonstrate how AI systems can:
 
@@ -55,163 +28,124 @@ Rather than replacing human artists, Yumi aims to demonstrate how AI systems can
 - inspire experimentation
 - help users interact with music in new ways
 
-This project is also part of a broader research interest in Human-AI Interaction and emotionally aware generative systems.
+This project is also part of a broader research interest in Human-AI Interaction
+and emotionally aware generative systems.
 
-Yumi treats generative AI not as a substitute for human artistry, but as a collaborative medium that can extend and enrich the creative space around music.
+Yumi treats generative AI not as a substitute for human artistry, but as a
+collaborative medium that can extend and enrich the creative space around music.
 
-This project explores AI as a collaborative creative partner rather than a replacement for human musicians and artistic identity.
+## Current Features
 
----
+- Korean-first music creation interface
+- Prompt-style song idea input inspired by modern AI music tools
+- Mood, genre, vocal tone, duration, sound-detail, and reference-artist controls
+- Auto title mode with provider-title support and local fallback
+- Custom title mode
+- ACEMusic hosted API integration through a server-side backend
+- Generated audio playback
+- Generated lyrics display in the `가사` panel
+- Optional subtitle overlay with approximate timing
+- Generated SVG album cover using the final song title
+- Download menu for audio, album cover, and lyrics text when available
+- Docker-ready Hugging Face Space deployment
+- Secret scanning helper for API-key safety
 
-# 🧠 Current Features
-
-- 🎼 Emotion-based music generation flow
-- 🇰🇷 Korean-first music creation interface
-- 🎤 Vocal tone and sound-detail configuration
-- 🎧 Generated audio playback
-- 📝 Generated lyrics display
-- 🎬 Optional subtitle-style lyric timing
-- 🖼️ Generated SVG album-cover preview
-- ⬇️ Download menu for generated assets
-- 🔒 Secure backend API proxy architecture
-- 🎧 Demo-only mode for public deployment
-- 🧩 Structured prompt engineering pipeline
-- ⚡ Fast React + Vite frontend
-- 🎨 Tailwind-based responsive UI
-- 🛡️ Security validation scripts
-
----
-
-# 🏗️ Architecture
-
-```text
-React/Vite Frontend
-        ↓
-Local Yumi Backend (127.0.0.1:4000)
-        ↓
-ACEMusic Hosted API
-        ↓
-Generated Audio + Metadata
-        ↓
-Result UI
-```
-
-The browser never calls the hosted provider directly.  
-The API key is stored only inside `.env.local`.
-
----
-
-# ⚙️ Tech Stack
+## Tech Stack
 
 | Layer | Technology |
-|---|---|
-| Frontend | React 19 + Vite + TypeScript |
+| --- | --- |
+| Frontend | React 19, Vite 8, TypeScript |
 | Styling | Tailwind CSS 4 |
-| Backend | Local Node.js HTTP server |
+| Backend | Node.js HTTP server |
 | Music Provider | ACEMusic hosted API |
-| Local Storage | `generated/`, `server/data/` |
-| Public Demo | Static demo assets in `public/demo/` |
+| Local Storage | Generated files in `generated/`; usage record in `server/data/` |
+| Deployment | Local dev or Hugging Face Docker Space |
 
----
+## Architecture
 
-# 📂 Project Structure
+Local development:
+
+```text
+React/Vite UI at localhost:5173
+  -> Yumi backend at 127.0.0.1:4000
+  -> ACEMusic hosted API
+  -> generated audio + provider metadata
+  -> local generated/ files
+  -> UI result panel
+```
+
+Hugging Face Docker Space:
+
+```text
+Browser on *.hf.space
+  -> same-origin /api/generate
+  -> Node backend inside the Space
+  -> ACEMusic hosted API using HF Secret ACEMUSIC_API_KEY
+  -> generated files served from /generated/*
+```
+
+The browser never calls the hosted provider directly. The API key is read only
+by the backend from `.env.local` locally or from Hugging Face Space Secrets in
+deployment.
+
+## Project Structure
 
 ```text
 yumi/
-├── docs/
-│   ├── DESIGN.md
-│   └── PRD.md
-├── public/
-│   └── demo/
-├── server/
-│   ├── local-music-server.mjs
-│   └── check-secrets.mjs
-├── src/
-│   ├── App.tsx
-│   ├── main.tsx
-│   └── index.css
-├── generated/
-├── .env.example
-├── package.json
-└── README.md
+  docs/
+    DESIGN.md
+    PRD.md
+  public/
+    demo/
+  server/
+    local-music-server.mjs
+    check-secrets.mjs
+  src/
+    App.tsx
+    main.tsx
+    index.css
+  generated/              # local generated files, not for Git or Docker
+  Dockerfile              # Hugging Face Docker Space runtime
+  .dockerignore
+  .env.example
+  package.json
 ```
 
----
+## Local Setup
 
-# 🔐 Security Architecture
-
-Yumi intentionally avoids exposing provider credentials to the browser.
-
-## Principles
-
-- API keys are stored only inside `.env.local`
-- Frontend never directly calls external music APIs
-- Public deployments disable real generation
-- Demo audio is served statically
-- Sensitive files are excluded from Git
-
----
-
-# 🚫 Files Excluded From Git
-
-```gitignore
-node_modules/
-dist/
-.env
-.env.local
-generated/
-*.wav
-*.mp3
-.venv/
-```
-
----
-
-# 🚀 Local Development
-
-## Install Dependencies
+Install dependencies:
 
 ```bash
 npm install
 ```
 
----
-
-## Create Environment File
+Copy the environment template:
 
 ```bash
 cp .env.example .env.local
 ```
 
-Example configuration:
+Configure `.env.local`:
 
 ```env
 MUSIC_PROVIDER=acemusic-api
 ACEMUSIC_API_BASE_URL=https://api.acemusic.ai
 ACEMUSIC_API_KEY=replace_with_your_key
-
 LOCAL_DAILY_LIMIT=0
 LOCAL_BIND_HOST=127.0.0.1
 LOCAL_API_PORT=4000
-
 LOCAL_ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
-
 DEPLOY_DEMO_ONLY=false
-
 VITE_MUSIC_API_BASE=http://127.0.0.1:4000
 ```
 
----
-
-## Run Backend
+Run the backend:
 
 ```bash
 npm run server:music
 ```
 
----
-
-## Run Frontend
+Run the frontend:
 
 ```bash
 npm run dev
@@ -223,26 +157,13 @@ Open:
 http://localhost:5173
 ```
 
----
-
-# 🧪 Useful Commands
-
-## Type Checking
+## Useful Commands
 
 ```bash
 npm run typecheck
-```
-
-## Production Build
-
-```bash
 npm run build
-```
-
-## Security Scan
-
-```bash
 npm run security:check
+node --check server/local-music-server.mjs
 ```
 
 Runtime checks:
@@ -252,67 +173,96 @@ curl http://127.0.0.1:4000/api/health
 curl http://127.0.0.1:4000/api/usage
 ```
 
----
+## Hugging Face Space Deployment
 
-# ☁️ Hosted Provider Integration
+For full generation on Hugging Face, create a **Docker Space**. A static Space
+is not enough because the API key must stay server-side.
 
-Yumi currently uses the hosted ACEMusic API flow.
+Recommended setup:
 
-The backend converts frontend emotional input into structured music-generation prompts and sends requests to:
+1. Create a new Space on Hugging Face.
+2. Choose **Docker** as the Space SDK.
+3. Upload or sync this repository to the Space.
+4. In the Space settings, add a Secret:
 
 ```text
-POST /v1/chat/completions
+ACEMUSIC_API_KEY=<your ACEMusic key>
 ```
 
-Key characteristics:
+Optional Space variables:
 
-- Browser never accesses provider directly
-- API key remains server-side
-- Audio responses stored locally
-- Structured metadata returned to frontend
+```text
+MUSIC_PROVIDER=acemusic-api
+ACEMUSIC_API_BASE_URL=https://api.acemusic.ai
+DEPLOY_DEMO_ONLY=false
+LOCAL_DAILY_LIMIT=0
+```
 
----
+Do not add `ACEMUSIC_API_KEY` as a public variable. Use **Secrets** only.
 
-# 🎧 Demo Deployment Mode
+The Docker runtime builds the Vite frontend, starts the Node server on
+`0.0.0.0:$PORT`, serves the frontend from `dist/`, and exposes the generation
+API at the same origin:
 
-For public portfolio deployment, Yumi supports demo-only playback mode.
+```text
+/api/generate
+/api/health
+/api/usage
+/generated/*
+```
 
-Enable:
+## API Behavior
+
+The frontend sends structured generation input to the backend:
+
+- mood
+- genres
+- reference artists
+- lyrics or creative idea
+- vocal tone
+- sound details
+- duration
+- title mode
+
+The backend builds a provider prompt that asks for:
+
+- an original song
+- Korean lyrics in Hangul when Korean is used
+- English lines to remain in English
+- no romanized Korean where possible
+- a short creative title
+- lyrics content separate from provider metadata
+
+If the provider returns a usable title, Yumi uses it. If not, Yumi falls back to
+a local deterministic title picker. If the user selects custom title mode, the
+custom title always wins.
+
+## Demo Mode
+
+Set this when you want to show the UI without calling the hosted music API:
 
 ```env
 DEPLOY_DEMO_ONLY=true
 ```
 
-In demo-only mode:
+In demo-only mode, the backend does not call ACEMusic. It returns prepared demo
+assets from `public/demo/`.
 
-- no external API calls are made
-- demo tracks from `public/demo/` are served
-- private API keys remain protected
+## Security Notes
 
----
+- Do not commit `.env.local`.
+- Do not place API keys in React code.
+- Do not commit `generated/` or local usage files.
+- Store production API keys in Hugging Face Space Secrets.
+- Run `npm run security:check` before pushing to GitHub or Hugging Face.
 
-# 📚 Documentation
+## Documentation
 
 - [Product Requirements Document](docs/PRD.md)
 - [Design Document](docs/DESIGN.md)
 
----
+## Status
 
-# 🎯 Future Goals
-
-Planned future extensions include:
-
-- emotion-aware recommendation systems
-- album artwork generation
-- user listening-history adaptation
-- intelligent prompt refinement
-- LLM-powered music understanding
-- Human–AI creative interaction research
-- scalable deployment workflows
-- commercial AI music API integrations
-
----
-
-# 📄 License
-
-This project is intended for educational, research, and portfolio purposes.
+Yumi is an MVP and portfolio research project. It focuses on the end-to-end
+experience of creative music generation rather than production-scale account
+management, billing, sharing, or editing workflows.

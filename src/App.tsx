@@ -44,7 +44,8 @@ type SubtitleCue = {
   weight: number;
 };
 
-const musicApiBase = import.meta.env.VITE_MUSIC_API_BASE || "http://127.0.0.1:4000";
+const musicApiBase =
+  import.meta.env.VITE_MUSIC_API_BASE || (import.meta.env.PROD ? "" : "http://127.0.0.1:4000");
 
 const moodOptions = ["차분한", "설레는", "행복한", "우울한", "집중하고 싶은", "에너지가 필요한"];
 const genreOptions = ["K-pop", "R&B", "Pop", "Lo-fi", "Ballad", "Hip-hop", "EDM", "Acoustic"];
