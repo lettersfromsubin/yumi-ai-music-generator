@@ -755,7 +755,8 @@ export default function App() {
       const payload = await response.json();
 
       if (!response.ok) {
-        throw new Error(payload.error || "ACEMusic 생성에 실패했습니다.");
+        const requestId = typeof payload.requestId === "string" ? ` requestId=${payload.requestId}` : "";
+        throw new Error(`${payload.error || "ACEMusic 생성에 실패했습니다."}${requestId}`);
       }
 
       setResult({

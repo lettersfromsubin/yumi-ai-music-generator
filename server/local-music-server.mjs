@@ -39,6 +39,8 @@ const acemusicApiBaseUrl = (process.env.ACEMUSIC_API_BASE_URL || "https://api.ac
 );
 const acemusicApiKey = isPlaceholderValue(process.env.ACEMUSIC_API_KEY) ? "" : process.env.ACEMUSIC_API_KEY || "";
 const acemusicModel = process.env.ACEMUSIC_MODEL || "acemusic/acestep-v15-turbo";
+const acemusicRequestTimeoutMs = parsePositiveIntegerEnv(process.env.ACEMUSIC_REQUEST_TIMEOUT_MS, 240000);
+const acemusicAudioTimeoutMs = parsePositiveIntegerEnv(process.env.ACEMUSIC_AUDIO_TIMEOUT_MS, 120000);
 
 const providerCatalog = {
   "acemusic-api": {
@@ -76,6 +78,84 @@ function parseDailyLimit(value) {
   }
 
   return Math.floor(parsed);
+}
+
+function parsePositiveIntegerEnv(value, fallback) {
+  const parsed = Number(value);
+
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return fallback;
+  }
+
+  return Math.floor(parsed);
+}
+
+function createRequestId() {
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function errorMessage(error) {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function errorStack(error) {
+  return error instanceof Error ? error.stack : "";
+}
+
+function publicStatusCode(error, fallback = 500) {
+  const statusCode = error && typeof error.statusCode === "number" ? error.statusCode : fallback;
+
+  if (!Number.isInteger(statusCode) || statusCode < 400 || statusCode > 599) {
+    return fallback;
+  }
+
+  return statusCode;
+}
+
+function createUpstreamError(message, details = {}) {
+  const error = new Error(message);
+  Object.assign(error, details);
+  return error;
+}
+
+function logRuntimeEvent(event, details = {}) {
+  console.log(`[yumi] ${event} ${JSON.stringify(details)}`);
+}
+
+function logRuntimeError(event, error, details = {}) {
+  console.error(
+    `[yumi] ${event} ${JSON.stringify({
+      ...details,
+      message: errorMessage(error),
+      stack: errorStack(error)
+    })}`
+  );
+}
+
+async function fetchWithTimeout(url, options = {}, timeoutMs, errorPrefix) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      throw createUpstreamError(`${errorPrefix} timed out after ${timeoutMs}ms`, {
+        statusCode: 504,
+        phase: "provider-timeout"
+      });
+    }
+
+    throw createUpstreamError(`${errorPrefix}: ${errorMessage(error)}`, {
+      statusCode: 502,
+      phase: "provider-network"
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 function todayKey() {
@@ -1005,7 +1085,12 @@ function providerHeaders(apiKey, extra = {}) {
 }
 
 async function fetchJson(baseUrl, pathname, options = {}, errorPrefix) {
-  const response = await fetch(`${baseUrl}${pathname}`, options);
+  const response = await fetchWithTimeout(
+    `${baseUrl}${pathname}`,
+    options,
+    acemusicRequestTimeoutMs,
+    errorPrefix
+  );
   const text = await response.text();
   let payload = null;
 
@@ -1021,7 +1106,12 @@ async function fetchJson(baseUrl, pathname, options = {}, errorPrefix) {
       payload?.detail ||
       payload?.error ||
       `${errorPrefix} (${response.status})`;
-    throw new Error(message);
+    throw createUpstreamError(message, {
+      statusCode: response.status >= 500 ? 502 : response.status,
+      providerStatus: response.status,
+      providerBodyPreview: text.slice(0, 1200),
+      phase: "provider-response"
+    });
   }
 
   return payload ?? text;
@@ -1111,12 +1201,21 @@ async function persistHostedAudio(item, input, title) {
     return persistAudioBuffer(Buffer.from(base64Data, "base64"), input, mimeType, undefined, title);
   }
 
-  const response = await fetch(candidateUrl, {
-    headers: acemusicApiKey ? { Authorization: `Bearer ${acemusicApiKey}` } : {}
-  });
+  const response = await fetchWithTimeout(
+    candidateUrl,
+    {
+      headers: acemusicApiKey ? { Authorization: `Bearer ${acemusicApiKey}` } : {}
+    },
+    acemusicAudioTimeoutMs,
+    "ACEMusic audio download failed"
+  );
 
   if (!response.ok) {
-    throw new Error(`ACEMusic 오디오 다운로드에 실패했습니다. (${response.status})`);
+    throw createUpstreamError(`ACEMusic 오디오 다운로드에 실패했습니다. (${response.status})`, {
+      statusCode: 502,
+      providerStatus: response.status,
+      phase: "provider-audio-download"
+    });
   }
 
   const contentType = response.headers.get("content-type") || item?.mime_type || "audio/wav";
@@ -1126,12 +1225,25 @@ async function persistHostedAudio(item, input, title) {
   return persistAudioBuffer(Buffer.from(arrayBuffer), input, contentType, extension, title);
 }
 
-async function callAcemusicHosted(input, prompt, publicBaseUrl) {
+async function callAcemusicHosted(input, prompt, publicBaseUrl, requestId) {
   if (!acemusicApiKey) {
-    throw new Error("ACEMUSIC_API_KEY가 서버 환경 변수 또는 .env.local에 설정되어 있지 않습니다.");
+    throw createUpstreamError("ACEMUSIC_API_KEY가 서버 환경 변수 또는 .env.local에 설정되어 있지 않습니다.", {
+      statusCode: 500,
+      phase: "provider-config"
+    });
   }
 
   const requestBody = buildAcemusicHostedBody(input, prompt);
+
+  logRuntimeEvent("acemusic_request", {
+    requestId,
+    model: requestBody.model,
+    duration: requestBody.audio_config.duration,
+    vocalLanguage: requestBody.audio_config.vocal_language,
+    instrumental: requestBody.audio_config.instrumental,
+    endpoint: `${acemusicApiBaseUrl}/v1/chat/completions`
+  });
+
   const payload = await fetchJson(
     acemusicApiBaseUrl,
     "/v1/chat/completions",
@@ -1146,10 +1258,24 @@ async function callAcemusicHosted(input, prompt, publicBaseUrl) {
     "ACEMusic hosted API 호출에 실패했습니다."
   );
   const { item, content, audioCodes } = extractHostedAudioItem(payload);
+
+  logRuntimeEvent("acemusic_response", {
+    requestId,
+    model: payload?.model || acemusicModel,
+    finishReason: payload?.choices?.[0]?.finish_reason,
+    hasAudioUrl: Boolean(item?.audio_url?.url || item?.url)
+  });
+
   const providerTitle = extractProviderTitle(input, content, payload, item);
   const title = providerTitle || createTitle(input);
   const savedAudio = await persistHostedAudio(item, input, title);
   const coverFileName = await persistAlbumCover(input, title);
+
+  logRuntimeEvent("acemusic_audio_saved", {
+    requestId,
+    fileName: savedAudio.audioFileName,
+    mimeType: savedAudio.contentType
+  });
 
   return {
     title,
@@ -1216,8 +1342,8 @@ async function createDemoResult(input, prompt, usage, reason, publicBaseUrl) {
   };
 }
 
-async function generateWithProvider(input, prompt, publicBaseUrl) {
-  const generated = await callAcemusicHosted(input, prompt, publicBaseUrl);
+async function generateWithProvider(input, prompt, publicBaseUrl, requestId) {
+  const generated = await callAcemusicHosted(input, prompt, publicBaseUrl, requestId);
 
   return {
     ...generated,
@@ -1227,7 +1353,7 @@ async function generateWithProvider(input, prompt, publicBaseUrl) {
   };
 }
 
-async function generateTrack(request, response, origin) {
+async function generateTrack(request, response, origin, requestId) {
   const body = await readRequestBody(request);
   const input = normalizeInput(body.input || {});
 
@@ -1240,6 +1366,14 @@ async function generateTrack(request, response, origin) {
   const publicBaseUrl = publicBaseUrlFromRequest(request);
 
   const usage = await readUsage();
+
+  logRuntimeEvent("generation_start", {
+    requestId,
+    source: demoOnlyMode ? "demo" : provider,
+    mood: input.mood,
+    genres: input.genres,
+    duration: parseDuration(input.duration)
+  });
 
   if (demoOnlyMode) {
     sendJson(
@@ -1270,9 +1404,16 @@ async function generateTrack(request, response, origin) {
     return;
   }
 
-  const generated = await generateWithProvider(input, prompt, publicBaseUrl);
+  const generated = await generateWithProvider(input, prompt, publicBaseUrl, requestId);
   const nextUsage = { date: usage.date, count: usage.count + 1 };
   await writeUsage(nextUsage);
+
+  logRuntimeEvent("generation_success", {
+    requestId,
+    title: generated.title,
+    source: generated.source,
+    usageCount: nextUsage.count
+  });
 
   sendJson(
     response,
@@ -1427,6 +1568,7 @@ function buildHealthPayload() {
 
 const server = createServer(async (request, response) => {
   const origin = request.headers.origin;
+  const requestId = createRequestId();
 
   try {
     if (request.method === "OPTIONS") {
@@ -1451,7 +1593,7 @@ const server = createServer(async (request, response) => {
     }
 
     if (request.url === "/api/generate" && request.method === "POST") {
-      await generateTrack(request, response, origin);
+      await generateTrack(request, response, origin, requestId);
       return;
     }
 
@@ -1466,10 +1608,25 @@ const server = createServer(async (request, response) => {
 
     sendJson(response, 404, { error: "Not found" }, origin);
   } catch (error) {
+    const statusCode = publicStatusCode(error);
+
+    logRuntimeError("request_failed", error, {
+      requestId,
+      method: request.method,
+      url: request.url,
+      statusCode,
+      providerStatus: error?.providerStatus,
+      phase: error?.phase,
+      providerBodyPreview: error?.providerBodyPreview
+    });
+
     sendJson(
       response,
-      500,
-      { error: error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다." },
+      statusCode,
+      {
+        error: error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다.",
+        requestId
+      },
       origin
     );
   }
