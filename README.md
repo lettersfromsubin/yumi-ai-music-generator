@@ -8,6 +8,7 @@ colorTo: green
 short_description: Korean-first AI music creator with ACEMusic backend
 ---
 # Yumi — AI Music Creator
+### (updated 05.13.2026)
 
 🚀 [Live Demo on Hugging Face](https://huggingface.co/spaces/ALEXJK0901/yumi-ai-music-creator)
 
