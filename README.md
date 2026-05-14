@@ -9,6 +9,10 @@ short_description: Korean-first AI music creator with ACEMusic backend
 ---
 # Yumi — AI Music Creator
 
+🚀 [Live Demo on Hugging Face](https://huggingface.co/spaces/ALEXJK0901/yumi-ai-music-creator)
+
+🎧 [SoundCloud Demo Tracks](https://soundcloud.com/oxl8s6qj4r1i?utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing)
+
 Yumi is a portfolio MVP for creating short AI-generated music from mood, genre,
 lyrics, and sound direction.
 
